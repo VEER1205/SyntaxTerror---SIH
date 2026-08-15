@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   Sparkles,
   UserRound,
+  Map,
 } from "lucide-react";
 
 
@@ -110,6 +111,10 @@ export function CommandMenu() {
             <CommandItem value="student verification" onSelect={() => go("/verify")}>
               <Search className="size-4 text-muted-foreground" />
               Student Verification
+            </CommandItem>
+            <CommandItem value="institution approval map" onSelect={() => go("/map")}>
+              <Map className="size-4 text-muted-foreground" />
+              Institution Approval Map
             </CommandItem>
             <CommandItem value="home role select" onSelect={() => go("/")}>
               <Home className="size-4 text-muted-foreground" />

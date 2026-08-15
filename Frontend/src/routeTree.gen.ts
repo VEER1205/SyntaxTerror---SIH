@@ -13,6 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ControlRouteImport } from './routes/control'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as EvaluatorsRouteImport } from './routes/evaluators'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as MapRouteImport } from './routes/map'
 import { Route as ScrutinyRouteImport } from './routes/scrutiny'
 import { Route as VaultRouteImport } from './routes/vault'
 import { Route as VerifyRouteImport } from './routes/verify'
@@ -37,6 +39,16 @@ const EvaluatorsRoute = EvaluatorsRouteImport.update({
   path: '/evaluators',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MapRoute = MapRouteImport.update({
+  id: '/map',
+  path: '/map',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ScrutinyRoute = ScrutinyRouteImport.update({
   id: '/scrutiny',
   path: '/scrutiny',
@@ -58,6 +70,8 @@ export interface FileRoutesByFullPath {
   '/control': typeof ControlRoute
   '/dashboard': typeof DashboardRoute
   '/evaluators': typeof EvaluatorsRoute
+  '/login': typeof LoginRoute
+  '/map': typeof MapRoute
   '/scrutiny': typeof ScrutinyRoute
   '/vault': typeof VaultRoute
   '/verify': typeof VerifyRoute
@@ -67,6 +81,8 @@ export interface FileRoutesByTo {
   '/control': typeof ControlRoute
   '/dashboard': typeof DashboardRoute
   '/evaluators': typeof EvaluatorsRoute
+  '/login': typeof LoginRoute
+  '/map': typeof MapRoute
   '/scrutiny': typeof ScrutinyRoute
   '/vault': typeof VaultRoute
   '/verify': typeof VerifyRoute
@@ -77,6 +93,8 @@ export interface FileRoutesById {
   '/control': typeof ControlRoute
   '/dashboard': typeof DashboardRoute
   '/evaluators': typeof EvaluatorsRoute
+  '/login': typeof LoginRoute
+  '/map': typeof MapRoute
   '/scrutiny': typeof ScrutinyRoute
   '/vault': typeof VaultRoute
   '/verify': typeof VerifyRoute
@@ -88,6 +106,8 @@ export interface FileRouteTypes {
     | '/control'
     | '/dashboard'
     | '/evaluators'
+    | '/login'
+    | '/map'
     | '/scrutiny'
     | '/vault'
     | '/verify'
@@ -97,6 +117,8 @@ export interface FileRouteTypes {
     | '/control'
     | '/dashboard'
     | '/evaluators'
+    | '/login'
+    | '/map'
     | '/scrutiny'
     | '/vault'
     | '/verify'
@@ -106,6 +128,8 @@ export interface FileRouteTypes {
     | '/control'
     | '/dashboard'
     | '/evaluators'
+    | '/login'
+    | '/map'
     | '/scrutiny'
     | '/vault'
     | '/verify'
@@ -116,6 +140,8 @@ export interface RootRouteChildren {
   ControlRoute: typeof ControlRoute
   DashboardRoute: typeof DashboardRoute
   EvaluatorsRoute: typeof EvaluatorsRoute
+  LoginRoute: typeof LoginRoute
+  MapRoute: typeof MapRoute
   ScrutinyRoute: typeof ScrutinyRoute
   VaultRoute: typeof VaultRoute
   VerifyRoute: typeof VerifyRoute
@@ -151,6 +177,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EvaluatorsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/map': {
+      id: '/map'
+      path: '/map'
+      fullPath: '/map'
+      preLoaderRoute: typeof MapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/scrutiny': {
       id: '/scrutiny'
       path: '/scrutiny'
@@ -180,6 +220,8 @@ const rootRouteChildren: RootRouteChildren = {
   ControlRoute: ControlRoute,
   DashboardRoute: DashboardRoute,
   EvaluatorsRoute: EvaluatorsRoute,
+  LoginRoute: LoginRoute,
+  MapRoute: MapRoute,
   ScrutinyRoute: ScrutinyRoute,
   VaultRoute: VaultRoute,
   VerifyRoute: VerifyRoute,

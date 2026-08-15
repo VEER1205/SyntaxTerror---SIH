@@ -111,34 +111,10 @@ const cycle = [
 function LoginMenu() {
   const navigate = useNavigate();
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button size="sm" className="gap-1.5 rounded-full px-4">
-          <LogIn className="size-3.5" />
-          Login as
-          <ChevronDown className="size-3.5 opacity-70" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-72">
-        <DropdownMenuLabel className="text-[11px] tracking-widest text-muted-foreground uppercase">
-          Choose a role
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {logins.map((l) => (
-          <DropdownMenuItem
-            key={l.to}
-            className="cursor-pointer gap-3 py-2.5"
-            onSelect={() => navigate({ to: l.to })}
-          >
-            <l.icon className="size-4 text-primary" />
-            <span className="min-w-0">
-              <span className="block text-sm">{l.label}</span>
-              <span className="block truncate text-[11px] text-muted-foreground">{l.hint}</span>
-            </span>
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Button size="sm" className="gap-1.5 rounded-full px-4" onClick={() => navigate({ to: "/login" })}>
+      <LogIn className="size-3.5" />
+      Login
+    </Button>
   );
 }
 
@@ -205,6 +181,12 @@ function Landing() {
                 <Button asChild size="sm" variant="outline" className="gap-1.5 rounded-full px-4">
                   <Link to="/verify">
                     Verify a course
+                    <ArrowRight className="size-3.5" />
+                  </Link>
+                </Button>
+                <Button asChild size="sm" variant="outline" className="gap-1.5 rounded-full px-4">
+                  <Link to="/map">
+                    Institution map
                     <ArrowRight className="size-3.5" />
                   </Link>
                 </Button>

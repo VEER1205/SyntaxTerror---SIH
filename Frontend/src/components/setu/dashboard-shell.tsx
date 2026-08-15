@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { useEffect, useState, type ReactNode } from "react";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { motion } from "motion/react";
 import {
   GraduationCap,
@@ -8,9 +8,12 @@ import {
   ShieldCheck,
   Sparkles,
   UserRound,
+  Map,
+  LogOut,
 } from "lucide-react";
 import { CommandMenu } from "@/components/setu/command-menu";
 import { spring } from "@/lib/setu-data";
+import { getSession, logout } from "@/lib/auth";
 
 export type Persona = "coordinator" | "officer";
 
@@ -22,12 +25,14 @@ const NAV: Record<Persona, NavItem[]> = {
     { to: "/vault", label: "Compliance Vault", icon: ShieldCheck },
     { to: "/scrutiny", label: "AI Pre-Scrutiny", icon: Sparkles },
     { to: "/verify", label: "Public record", icon: GraduationCap },
+    { to: "/map", label: "Institution map", icon: Map },
   ],
   officer: [
     { to: "/control", label: "Overview", icon: LayoutDashboard },
     { to: "/evaluators", label: "Evaluator Matching", icon: UserRound },
     { to: "/scrutiny", label: "Application Scrutiny", icon: ScanSearch },
     { to: "/verify", label: "Public record", icon: GraduationCap },
+    { to: "/map", label: "Institution map", icon: Map },
   ],
 };
 
@@ -52,8 +57,21 @@ export function DashboardShell({
   children: ReactNode;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+  const [session, setSession] = useState<ReturnType<typeof getSession>>(null);
+
+  useEffect(() => {
+    const current = getSession();
+    setSession(current);
+    if (!current || (persona === "coordinator" && current.role !== "institution") || (persona === "officer" && current.role !== "officer")) {
+      void navigate({ to: "/login" });
+    }
+  }, [navigate, persona]);
+
   const nav = NAV[persona];
-  const who = WHO[persona];
+  const who = session ? { name: session.name, org: session.organization, line: persona === "coordinator" ? "Let's take a look at where your application stands." : "Here's what needs your judgement today." } : WHO[persona];
+
+  if (!session) return null;
 
   return (
     <div className="min-h-screen lg:flex">
@@ -103,6 +121,12 @@ export function DashboardShell({
           <p className="mt-1 max-w-40 text-[11px] leading-relaxed text-muted-foreground/70">
             {who.org}
           </p>
+          <button
+            onClick={() => { logout(); void navigate({ to: "/login" }); }}
+            className="mt-4 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground"
+          >
+            <LogOut className="size-3" /> Logout
+          </button>
         </div>
       </aside>
 
