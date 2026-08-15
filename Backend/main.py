@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from Routes.auth import router
+from Routes.dashBoard import dashBoardRouter
 from database import connectMongo,closeMongoConnection
 
 @asynccontextmanager
@@ -16,3 +17,4 @@ def index():
     return {"message":"BACKEND IS ONLINE"}
 
 app.include_router(router=router,prefix="/Auth",tags=["Auth"])
+app.include_router(router=dashBoardRouter,prefix="/public",tags=["Public heatmap"])
