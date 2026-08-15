@@ -11,7 +11,7 @@ Jwt Utility Functions
 def createAccessToken(userName:str,role:UserRole):
     payload = {
         "sub":userName,
-        "role":role.value
+        "role":role
     }
 
     return jwt.encode(payload=payload,key=settings.SECRET_KEY,algorithm=settings.ALGORITHM)

@@ -14,6 +14,6 @@ class LoginRequest(BaseModel):
 
 class SignupRequest(BaseModel):
     email: EmailStr
-    name: str
+    userName: str
     Password: str
     role:UserRole
