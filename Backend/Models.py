@@ -9,7 +9,7 @@ class UserRole(Enum):
 
 # Request Classes 
 class LoginRequest(BaseModel):
-    userName: str
+    identifier: str
     password: str
 
 class SignupRequest(BaseModel):

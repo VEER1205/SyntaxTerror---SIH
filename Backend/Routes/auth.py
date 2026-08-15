@@ -9,7 +9,12 @@ router = APIRouter()
 async def userLogin(credentials: LoginRequest, response: Response, db = Depends(getDatabase)):
     try:
         
-        user = await db["user"].find_one({"userName": credentials.userName})
+        user = await db["user"].find_one(
+            {"$or":[
+                {"userName": credentials.identifier},
+                {"email": credentials.identifier}
+            ]}
+        )
         
         if not user:
             raise HTTPException(
