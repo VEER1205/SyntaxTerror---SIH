@@ -1,9 +1,12 @@
 import jwt
 from Models import UserRole
 from config import settings
-from pydantic import L
 from fastapi import FastAPI, Response, Depends, HTTPException, status, Cookie
+from passlib.hash import argon2
 
+"""
+Jwt Utility Functions
+"""
 
 def createAccessToken(userName:str,role:UserRole):
     payload = {
@@ -11,7 +14,7 @@ def createAccessToken(userName:str,role:UserRole):
         "role":role.value
     }
 
-    return jwt.encode(payload=payload,key=settings.SECRET_KEY,algorithm=[settings.ALGORITHM])
+    return jwt.encode(payload=payload,key=settings.SECRET_KEY,algorithm=settings.ALGORITHM)
 
 
 def getCurrentUserFromCookie(accessToken:str | None = Cookie(default=None)):
@@ -41,3 +44,14 @@ def requiredRole(allowedRole:list[str]):
 
         return user
     return roleChecker
+
+
+"""
+PassLib Utility Functions
+"""
+
+def hashPassword(password):
+    return argon2.hash(password)
+
+def verifyPassword(hashPassword,password):
+    return argon2.verify(password,hashPassword)

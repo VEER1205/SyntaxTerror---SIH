@@ -7,13 +7,13 @@ class UserRole(Enum):
     AicteOfficer = "AicteOfficer"
 
 
-class User(BaseModel):
-    email: EmailStr
-    name: str
-    hashedPassword: str
-    role:UserRole
-
 # Request Classes 
 class LoginRequest(BaseModel):
     userName: str
     password: str
+
+class SignupRequest(BaseModel):
+    email: EmailStr
+    name: str
+    Password: str
+    role:UserRole
