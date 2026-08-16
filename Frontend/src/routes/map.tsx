@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, CheckCircle2, Filter, MapPin, Search, ShieldCheck, XCircle } from "lucide-react";
+import { createFileRoute } from "@tanstack/react-router";
+import { CheckCircle2, Filter, MapPin, Search, ShieldCheck, XCircle } from "lucide-react";
 import { colleges, type College } from "@/lib/setu-data";
+import { DashboardShell } from "@/components/setu/dashboard-shell";
+import { getSession } from "@/lib/auth";
 import "leaflet/dist/leaflet.css";
 
 export const Route = createFileRoute("/map")({
@@ -17,6 +19,7 @@ export const Route = createFileRoute("/map")({
   component: InstitutionMapPage,
 });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type LeafletMap = any;
 
 function LeafletView({
@@ -87,6 +90,10 @@ function InstitutionMapPage() {
   const [status, setStatus] = useState("All statuses");
   const [selected, setSelected] = useState<College | null>(null);
 
+  // Get the current user session so we know which sidebar to show
+  const session = getSession();
+  const persona = session?.role === "Institute" ? "coordinator" : "officer";
+
   const states = useMemo(
     () => ["All states", ...Array.from(new Set(colleges.map((c) => c.state))).sort()],
     []
@@ -104,20 +111,8 @@ function InstitutionMapPage() {
   });
 
   return (
-    <main className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card px-6 py-4">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
-          <Link to="/" className="flex items-center gap-2 text-sm font-bold text-foreground">
-            <ArrowLeft className="size-4 text-primary" /> Back to Saarthi Portal
-          </Link>
-          <div className="text-right">
-            <p className="text-sm font-bold text-foreground">Institution Approval Map</p>
-            <p className="text-xs text-muted-foreground">Public GIS View · Institutional Records & Readiness</p>
-          </div>
-        </div>
-      </header>
-
-      <div className="mx-auto max-w-7xl px-6 py-8">
+    <DashboardShell persona={persona}>
+      <div className="mx-auto max-w-7xl">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div>
             <span className="text-xs font-semibold tracking-wider text-primary uppercase">
@@ -130,9 +125,6 @@ function InstitutionMapPage() {
               Click an institution pin to inspect AI readiness score, course details, and accreditation records.
             </p>
           </div>
-          <Link to="/verify" className="text-xs font-bold text-primary hover:underline">
-            Open Public Course Verification →
-          </Link>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[22rem_1fr]">
@@ -156,8 +148,8 @@ function InstitutionMapPage() {
                   onChange={(e) => setState(e.target.value)}
                   className="mt-1.5 w-full rounded-xl border border-input bg-background px-3 py-2 text-xs font-medium text-foreground outline-none"
                 >
-                  {states.map((s) => (
-                    <option key={s}>{s}</option>
+                  {states.map((s, index) => (
+                    <option key={s || `state-${index}`}>{s}</option>
                   ))}
                 </select>
               </label>
@@ -184,11 +176,11 @@ function InstitutionMapPage() {
             </div>
 
             <div className="max-h-[460px] space-y-2 overflow-y-auto pr-1">
-              {filtered.map((college) => {
+              {filtered.map((college, index) => {
                 const isSelected = selected?.id === college.id;
                 return (
                   <button
-                    key={college.id}
+                    key={college.id || `college-${index}`}
                     onClick={() => setSelected(college)}
                     className={`w-full rounded-xl border p-3.5 text-left transition-all ${
                       isSelected
@@ -226,17 +218,6 @@ function InstitutionMapPage() {
           <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
             <div className="h-[600px] w-full">
               <LeafletView institutions={filtered} selected={selected} onSelect={setSelected} />
-            </div>
-            <div className="flex flex-wrap items-center gap-6 border-t border-border px-5 py-3 text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-2">
-                <span className="size-2.5 rounded-full bg-primary" /> Approved Institution
-              </span>
-              <span className="inline-flex items-center gap-2">
-                <span className="size-2.5 rounded-full bg-warn" /> Conditional Approval
-              </span>
-              <span className="ml-auto text-[11px] text-muted-subtle">
-                Saarthi Public GIS Portal
-              </span>
             </div>
           </section>
         </div>
@@ -299,6 +280,6 @@ function InstitutionMapPage() {
           </section>
         )}
       </div>
-    </main>
+    </DashboardShell>
   );
 }
