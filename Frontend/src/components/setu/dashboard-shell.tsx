@@ -38,13 +38,13 @@ const NAV: Record<Persona, NavItem[]> = {
 
 const WHO: Record<Persona, { name: string; org: string; line: string }> = {
   coordinator: {
-    name: "Ananya",
-    org: "Bhilai Institute of Engineering & Technology",
+    name: "Veer Dodiya",
+    org: "Dwarkadas J. Sanghvi College of Engineering",
     line: "Let's take a look at where your application stands.",
   },
   officer: {
     name: "Officer Rao",
-    org: "AICTE · East & South Zone desk",
+    org: "AICTE · West Zone desk",
     line: "Here's what needs your judgement today.",
   },
 };
@@ -63,13 +63,24 @@ export function DashboardShell({
   useEffect(() => {
     const current = getSession();
     setSession(current);
-    if (!current || (persona === "coordinator" && current.role !== "institution") || (persona === "officer" && current.role !== "officer")) {
+    
+    // Updated role strings to strictly match the UserAccount type in auth.ts
+    if (!current || (persona === "coordinator" && current.role !== "Institute") || (persona === "officer" && current.role !== "Evaluator")) {
       void navigate({ to: "/login" });
     }
   }, [navigate, persona]);
 
   const nav = NAV[persona];
-  const who = session ? { name: session.name, org: session.organization, line: persona === "coordinator" ? "Let's take a look at where your application stands." : "Here's what needs your judgement today." } : WHO[persona];
+  
+  // Safely fallback the organization field since auth.ts doesn't explicitly store it
+  const who = session 
+    ? { 
+        name: session.name, 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        org: (session as any).organization || WHO[persona].org, 
+        line: persona === "coordinator" ? "Let's take a look at where your application stands." : "Here's what needs your judgement today." 
+      } 
+    : WHO[persona];
 
   if (!session) return null;
 

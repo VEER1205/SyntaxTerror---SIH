@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ControlRouteImport } from './routes/control'
-import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as EvaluatorsRouteImport } from './routes/evaluators'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MapRouteImport } from './routes/map'
@@ -27,11 +26,6 @@ const IndexRoute = IndexRouteImport.update({
 const ControlRoute = ControlRouteImport.update({
   id: '/control',
   path: '/control',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EvaluatorsRoute = EvaluatorsRouteImport.update({
@@ -68,7 +62,6 @@ const VerifyRoute = VerifyRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/control': typeof ControlRoute
-  '/dashboard': typeof DashboardRoute
   '/evaluators': typeof EvaluatorsRoute
   '/login': typeof LoginRoute
   '/map': typeof MapRoute
@@ -79,7 +72,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/control': typeof ControlRoute
-  '/dashboard': typeof DashboardRoute
   '/evaluators': typeof EvaluatorsRoute
   '/login': typeof LoginRoute
   '/map': typeof MapRoute
@@ -91,7 +83,6 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/control': typeof ControlRoute
-  '/dashboard': typeof DashboardRoute
   '/evaluators': typeof EvaluatorsRoute
   '/login': typeof LoginRoute
   '/map': typeof MapRoute
@@ -104,7 +95,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/control'
-    | '/dashboard'
     | '/evaluators'
     | '/login'
     | '/map'
@@ -115,7 +105,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/control'
-    | '/dashboard'
     | '/evaluators'
     | '/login'
     | '/map'
@@ -126,7 +115,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/control'
-    | '/dashboard'
     | '/evaluators'
     | '/login'
     | '/map'
@@ -138,7 +126,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ControlRoute: typeof ControlRoute
-  DashboardRoute: typeof DashboardRoute
   EvaluatorsRoute: typeof EvaluatorsRoute
   LoginRoute: typeof LoginRoute
   MapRoute: typeof MapRoute
@@ -161,13 +148,6 @@ declare module '@tanstack/react-router' {
       path: '/control'
       fullPath: '/control'
       preLoaderRoute: typeof ControlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/evaluators': {
@@ -218,7 +198,6 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ControlRoute: ControlRoute,
-  DashboardRoute: DashboardRoute,
   EvaluatorsRoute: EvaluatorsRoute,
   LoginRoute: LoginRoute,
   MapRoute: MapRoute,
