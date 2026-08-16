@@ -91,11 +91,9 @@ export function DashboardShell({
       {/* Rail */}
       <aside className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur lg:h-screen lg:w-60 lg:shrink-0 lg:border-r lg:border-b-0">
         <div className="flex items-center gap-2 px-5 py-4 lg:py-6">
-          <span className="grid size-6 place-items-center rounded-md bg-primary/10 text-[10px] font-medium text-primary">
-            S
-          </span>
+          <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="size-10"><path d="M 68 28 C 65 18, 48 14, 38 18 C 24 24, 22 40, 36 46 L 62 56 C 78 62, 76 78, 62 84 C 48 90, 30 84, 26 74" stroke="#087F5B" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none"></path><path d="M 12 70 Q 50 48 88 70" stroke="#087F5B" stroke-width="4" stroke-linecap="round" fill="none"></path><path d="M 72 16 L 75 8 L 78 16 L 86 19 L 78 22 L 75 30 L 72 22 L 64 19 Z" fill="#087F5B"></path><g stroke="#087F5B" stroke-width="2.5" fill="#087F5B"><line x1="44" y1="36" x2="56" y2="30"></line><line x1="56" y1="30" x2="62" y2="40"></line><line x1="62" y1="40" x2="50" y2="48"></line><line x1="50" y1="48" x2="44" y2="36"></line><line x1="44" y1="36" x2="62" y2="40"></line><circle cx="44" cy="36" r="3.5"></circle><circle cx="56" cy="30" r="3.5"></circle><circle cx="62" cy="40" r="3.5"></circle><circle cx="50" cy="48" r="3.5"></circle></g></svg>
           <Link to="/" className="text-sm font-medium tracking-tight">
-            Setu
+            SAARTHI
           </Link>
           <span className="ml-auto text-[10px] tracking-widest text-muted-foreground uppercase lg:hidden">
             {persona}
