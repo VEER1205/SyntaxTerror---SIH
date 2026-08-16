@@ -1,43 +1,62 @@
+export type AppRole = "institution" | "officer" | "student";
+
 export interface UserAccount {
   id: string;
   name: string;
   email: string;
-  role: "Admin" | "Institute" | "Evaluator";
+  username: string;
+  password: string;
+  role: AppRole;
 }
 
 export const demoAccounts: UserAccount[] = [
   {
-    id: "admin-01",
-    name: "AICTE Admin",
-    email: "admin@aicte.gov.in",
-    role: "Admin",
-  },
-  {
     id: "inst-01",
     name: "Institute Coordinator",
     email: "coordinator@institute.edu",
-    role: "Institute",
+    username: "institution",
+    password: "institution123",
+    role: "institution",
   },
   {
-    id: "eval-01",
-    name: "Scrutiny Evaluator",
-    email: "evaluator@aicte.gov.in",
-    role: "Evaluator",
+    id: "officer-01",
+    name: "AICTE Processing Officer",
+    email: "officer@aicte.gov.in",
+    username: "officer",
+    password: "officer123",
+    role: "officer",
+  },
+  {
+    id: "student-01",
+    name: "Student / Public User",
+    email: "student@public.in",
+    username: "student",
+    password: "student123",
+    role: "student",
   },
 ];
 
 const STORAGE_KEY = "setu_user_session";
 
-export async function login(email: string, role?: string): Promise<UserAccount> {
-  const account = demoAccounts.find((acc) => acc.email === email) || {
-    id: `user-${Date.now()}`,
-    name: email.split("@")[0] || "User",
-    email,
-    role: (role as UserAccount["role"]) || "Institute",
-  };
+export function login(
+  username: string,
+  password: string
+): UserAccount | null {
+  const account = demoAccounts.find(
+    (acc) =>
+      acc.username === username &&
+      acc.password === password
+  );
+
+  if (!account) {
+    return null;
+  }
 
   if (typeof window !== "undefined") {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(account));
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(account)
+    );
   }
 
   return account;
@@ -45,19 +64,20 @@ export async function login(email: string, role?: string): Promise<UserAccount> 
 
 export function getSession(): UserAccount | null {
   if (typeof window === "undefined") {
-    // Adding the || null fallback satisfies strict TypeScript checks
-    return demoAccounts[0] || null; 
+    return null;
   }
 
   const stored = localStorage.getItem(STORAGE_KEY);
+
   if (!stored) {
-    return demoAccounts[0] || null;
+    return null;
   }
 
   try {
-    return (JSON.parse(stored) as UserAccount) || demoAccounts[0] || null;
+    return JSON.parse(stored) as UserAccount;
   } catch {
-    return demoAccounts[0] || null;
+    localStorage.removeItem(STORAGE_KEY);
+    return null;
   }
 }
 
