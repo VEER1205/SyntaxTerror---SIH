@@ -1,364 +1,188 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { AnimatePresence, motion } from "motion/react";
-import { toast } from "sonner";
 import {
   ArrowLeft,
-  ChevronDown,
-  Download,
-  Plus,
+  CheckCircle2,
+  GraduationCap,
   Search,
-  ShieldCheck,
-  X,
+  Building2,
+  Calendar,
+  Award,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { colleges, spring, type College } from "@/lib/setu-data";
+import { colleges, goldenRecord, type College } from "@/lib/setu-data";
 
 export const Route = createFileRoute("/verify")({
   head: () => ({
     meta: [
-      { title: "Verify a course approval — Setu" },
+      { title: "Public Course Verification — Saarthi" },
       {
         name: "description",
         content:
-          "Search any Indian engineering college and course to see whether it is currently approved by AICTE, with a dated verification you can re-check anytime.",
-      },
-      { property: "og:title", content: "Is this course actually approved?" },
-      {
-        property: "og:description",
-        content: "Public, login-free AICTE approval verification for students and parents.",
+          "Public verification tool: search any technical course in India and see its approval record, sanctioned intake and compliance history.",
       },
     ],
   }),
   component: VerifyPage,
 });
 
-function QrPlaceholder() {
-  const cells = useMemo(() => {
-    const out: boolean[] = [];
-    let seed = 7;
-    for (let i = 0; i < 441; i++) {
-      seed = (seed * 1103515245 + 12345) % 2147483648;
-      out.push((seed >> 8) % 3 !== 0);
-    }
-    return out;
-  }, []);
-  return (
-    <svg viewBox="0 0 21 21" className="size-24" role="img" aria-label="Verification QR code">
-      <rect width="21" height="21" fill="transparent" />
-      {cells.map((on, i) =>
-        on ? (
-          <rect
-            key={i}
-            x={i % 21}
-            y={Math.floor(i / 21)}
-            width="1"
-            height="1"
-            fill="currentColor"
-          />
-        ) : null,
-      )}
-      {(
-        [
-          [0, 0],
-          [14, 0],
-          [0, 14],
-        ] as const
-      ).map(([x, y]) => (
-        <g key={`${x}-${y}`}>
-          <rect x={x} y={y} width="7" height="7" fill="var(--color-card)" />
-          <rect
-            x={x + 0.5}
-            y={y + 0.5}
-            width="6"
-            height="6"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1"
-          />
-          <rect x={x + 2} y={y + 2} width="3" height="3" fill="currentColor" />
-        </g>
-      ))}
-    </svg>
-  );
-}
-
 function VerifyPage() {
-  const [query, setQuery] = useState("");
-  const [focused, setFocused] = useState(false);
-  const [selected, setSelected] = useState<College | null>(null);
-  const [historyOpen, setHistoryOpen] = useState(false);
-  const [shortlist, setShortlist] = useState<College[]>([]);
+  const [selectedCollege, setSelectedCollege] = useState<College>(colleges[0]);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const results = colleges.filter(
+  const filteredColleges = colleges.filter(
     (c) =>
-      query.trim().length > 0 &&
-      `${c.name} ${c.course} ${c.city}`.toLowerCase().includes(query.toLowerCase()),
+      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.course.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const addToShortlist = (c: College) => {
-    setShortlist((s) => (s.some((x) => x.id === c.id) || s.length >= 3 ? s : [...s, c]));
-  };
-
   return (
-    <main className="min-h-screen px-6 pb-28">
-      <div className="mx-auto flex max-w-2xl flex-col items-center pt-20 sm:pt-28">
-        <Link
-          to="/"
-          className="mb-16 inline-flex items-center gap-1.5 self-start text-xs text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="size-3.5" /> Setu
-        </Link>
+    <main className="min-h-screen bg-background">
+      {/* Top Header */}
+      <header className="border-b border-border bg-card px-6 py-4">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+          <Link to="/" className="flex items-center gap-2 text-sm font-bold text-foreground">
+            <ArrowLeft className="size-4 text-primary" /> Back to Saarthi Portal
+          </Link>
+          <div className="text-right">
+            <p className="text-sm font-bold text-foreground">Public Approval Verification</p>
+            <p className="text-xs text-muted-foreground">AICTE Public Records & Course Authenticity</p>
+          </div>
+        </div>
+      </header>
 
-        <motion.h1
-          layout
-          transition={spring}
-          className="text-center text-3xl font-semibold tracking-tight sm:text-[2.5rem] sm:leading-tight"
-        >
-          Is this course actually approved?
-        </motion.h1>
+      <div className="mx-auto max-w-7xl px-6 py-10">
+        <div className="mb-8">
+          <span className="text-xs font-semibold tracking-wider text-primary uppercase">
+            Instant Public Proof
+          </span>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+            Verify Course Approval & Compliance
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Search any AICTE approved course, sanctioned intake capacity, and historical accreditation record.
+          </p>
+        </div>
 
-        <motion.div layout transition={spring} className="relative mt-10 w-full">
-          <Search className="absolute top-1/2 left-5 size-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setTimeout(() => setFocused(false), 120)}
-            placeholder="Search college name + course"
-            className="w-full rounded-xl border border-border bg-card py-4 pr-5 pl-12 text-base outline-none transition-shadow placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/60"
-          />
+        {/* Search Input Box */}
+        <div className="mb-10 rounded-2xl border border-border bg-card p-4 shadow-sm">
+          <div className="flex items-center gap-3 rounded-xl border border-input bg-background px-4 py-3">
+            <Search className="size-5 text-primary" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by Institution name, course (e.g. B.Tech Computer Engg), or city..."
+              className="w-full bg-transparent text-sm font-medium text-foreground outline-none placeholder:text-muted-subtle"
+            />
+          </div>
+        </div>
 
-          <AnimatePresence>
-            {focused && results.length > 0 && (
-              <motion.ul
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={spring}
-                className="absolute z-10 mt-2 w-full overflow-hidden rounded-xl border border-border bg-popover shadow-sm"
-              >
-                {results.map((c) => (
-                  <li key={c.id}>
-                    <button
-                      onMouseDown={() => {
-                        setSelected(c);
-                        setQuery("");
-                        setHistoryOpen(false);
-                      }}
-                      className="flex w-full flex-col items-start px-5 py-3 text-left transition-colors hover:bg-accent"
-                    >
-                      <span className="text-sm">{c.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {c.course} · {c.city}
+        <div className="grid gap-8 lg:grid-cols-[22rem_1fr]">
+          {/* Institutions List */}
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
+            <h3 className="text-xs font-bold tracking-wider text-muted-foreground uppercase pb-2 border-b border-border">
+              Approved Institutions ({filteredColleges.length})
+            </h3>
+
+            <div className="space-y-2 max-h-[580px] overflow-y-auto pr-1">
+              {filteredColleges.map((c) => {
+                const isSelected = c.id === selectedCollege.id;
+                return (
+                  <button
+                    key={c.id}
+                    onClick={() => setSelectedCollege(c)}
+                    className={`w-full rounded-xl border p-4 text-left transition-all ${
+                      isSelected
+                        ? "border-primary bg-primary-light/60 shadow-sm"
+                        : "border-border bg-card hover:border-primary/30 hover:bg-primary-subtle/50"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-foreground truncate">{c.name}</span>
+                      <span
+                        className={`text-[10px] font-bold ${
+                          c.status === "approved" ? "text-ok-foreground" : "text-warn-foreground"
+                        }`}
+                      >
+                        {c.score}% Score
                       </span>
-                    </button>
-                  </li>
-                ))}
-              </motion.ul>
-            )}
-          </AnimatePresence>
-        </motion.div>
+                    </div>
+                    <p className="mt-1 text-[11px] text-muted-foreground">{c.city}, {c.state}</p>
+                    <p className="mt-1.5 text-xs font-medium text-primary line-clamp-1">{c.course}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-        <AnimatePresence mode="wait">
-          {!selected ? (
-            <motion.p
-              key="empty"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="mt-8 text-center text-sm text-muted-foreground"
-            >
-              Try “Kalinga”, “Ramakrishna” or “Bhilai”. No login, no forms.
-            </motion.p>
-          ) : (
-            <motion.section
-              key={selected.id}
-              initial={{ opacity: 0, y: 14, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -8, scale: 0.98 }}
-              transition={spring}
-              className="mt-10 w-full rounded-2xl border border-border bg-card p-8 sm:p-10"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-6">
+          {/* Verification Record Certificate Detail */}
+          <div className="space-y-6">
+            <div className="rounded-2xl border border-primary/20 bg-card p-8 shadow-sm">
+              <div className="flex flex-wrap items-start justify-between gap-6 border-b border-border pb-6">
                 <div>
-                  <h2 className="text-lg font-medium">{selected.name}</h2>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-ok-soft px-3 py-1 text-xs font-bold text-ok-foreground">
+                      <CheckCircle2 className="size-4 stroke-[3]" /> Verified AICTE Record
+                    </span>
+                    <span className="text-xs font-medium text-muted-subtle">
+                      Cycle: {selectedCollege.approvalYear}
+                    </span>
+                  </div>
+
+                  <h2 className="mt-4 text-2xl font-bold tracking-tight text-foreground">
+                    {selectedCollege.name}
+                  </h2>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {selected.course} · Intake {selected.intake}
+                    {selectedCollege.city}, {selectedCollege.state} · Established {selectedCollege.since}
                   </p>
                 </div>
-                <QrPlaceholder />
+
+                <div className="rounded-2xl bg-primary-light p-4 text-center">
+                  <span className="block text-3xl font-extrabold text-primary">{selectedCollege.score}%</span>
+                  <span className="block text-[10px] font-bold text-primary uppercase">Readiness Rating</span>
+                </div>
               </div>
 
-              <motion.div
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ ...spring, delay: 0.08 }}
-                className="mt-8 flex items-center gap-3"
-              >
-                <span
-                  className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium ${
-                    selected.status === "approved"
-                      ? "bg-ok-soft text-ok-foreground"
-                      : "bg-warn-soft text-warn-foreground"
-                  }`}
-                >
-                  <ShieldCheck className="size-4" />
-                  {selected.status === "approved"
-                    ? `Approved for ${selected.intake}`
-                    : `Conditionally approved for ${selected.intake}`}
-                </span>
-              </motion.div>
+              {/* Course & Accreditation Details Grid */}
+              <div className="mt-6 grid gap-4 sm:grid-cols-3">
+                <div className="rounded-xl border border-border bg-primary-subtle/30 p-4">
+                  <span className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                    <GraduationCap className="size-4 text-primary" /> Approved Program
+                  </span>
+                  <p className="mt-2 text-sm font-bold text-foreground">{selectedCollege.course}</p>
+                </div>
 
-              <p className="mt-3 text-xs text-muted-foreground">
-                Verified as of 12 Aug 2026, 9:14 AM · Scan the code to re-verify anytime — it always
-                shows today's status.
-              </p>
+                <div className="rounded-xl border border-border bg-primary-subtle/30 p-4">
+                  <span className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                    <Calendar className="size-4 text-primary" /> Sanctioned Intake
+                  </span>
+                  <p className="mt-2 text-sm font-bold text-foreground">{selectedCollege.intake}</p>
+                </div>
 
-              <p className="mt-6 text-sm leading-relaxed">
-                This means your degree will be valid for GATE, CAT and campus placements.
-              </p>
-
-              <div className="mt-8 border-t border-border pt-5">
-                <button
-                  onClick={() => setHistoryOpen((v) => !v)}
-                  className="flex w-full items-center justify-between text-sm text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  History
-                  <ChevronDown
-                    className={`size-4 transition-transform ${historyOpen ? "rotate-180" : ""}`}
-                  />
-                </button>
-                <AnimatePresence initial={false}>
-                  {historyOpen && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={spring}
-                      className="overflow-hidden"
-                    >
-                      <div className="relative mt-8 flex items-start justify-between px-2">
-                        <div className="absolute top-1.5 right-6 left-6 h-px bg-border" />
-                        {selected.history.map((h) => (
-                          <div key={h.year} className="relative flex flex-1 flex-col items-center">
-                            <span
-                              className={`size-3 rounded-full ${
-                                h.state === "ok" ? "bg-ok" : "bg-warn"
-                              }`}
-                            />
-                            <span className="mt-3 text-xs text-muted-foreground">{h.year}</span>
-                            {h.note && (
-                              <span className="mt-1 max-w-[14rem] text-center text-xs text-warn-foreground">
-                                {h.note}
-                              </span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                <div className="rounded-xl border border-border bg-primary-subtle/30 p-4">
+                  <span className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                    <Award className="size-4 text-primary" /> Accreditations
+                  </span>
+                  <p className="mt-2 text-sm font-bold text-foreground">{selectedCollege.accreditation}</p>
+                </div>
               </div>
 
-              <div className="mt-8 flex flex-wrap items-center gap-3">
-                <Button
-                  onClick={() =>
-                    toast.success("Certificate downloaded", {
-                      description: "Verified 12 Aug 2026.",
-                    })
-                  }
-                >
-                  <Download className="size-4" />
-                  Download verified certificate
-                </Button>
-                <button
-                  onClick={() => addToShortlist(selected)}
-                  className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  <Plus className="size-3.5" />
-                  Compare shortlist
-                </button>
+              {/* Golden Compliance Record Subtable */}
+              <div className="mt-8">
+                <h3 className="text-sm font-bold text-foreground">Golden Record Verification History</h3>
+                <div className="mt-3 divide-y divide-border rounded-xl border border-border bg-background p-4">
+                  {goldenRecord.slice(0, 4).map((row) => (
+                    <div key={row.label} className="flex items-center justify-between py-2.5 first:pt-0 last:pb-0 text-xs">
+                      <span className="text-muted-foreground">{row.label}</span>
+                      <span className="font-semibold text-foreground">{row.value}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </motion.section>
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {shortlist.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={spring}
-              className="mt-12 w-full"
-            >
-              <p className="text-xs tracking-widest text-muted-foreground uppercase">
-                Shortlist ({shortlist.length}/3)
-              </p>
-              <div className="mt-4 overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <tbody>
-                    <tr>
-                      <th className="py-3 pr-6 text-xs font-normal text-muted-foreground">
-                        College
-                      </th>
-                      {shortlist.map((c) => (
-                        <td key={c.id} className="py-3 pr-6 align-top">
-                          <div className="flex items-start gap-2">
-                            <span>{c.name}</span>
-                            <button
-                              onClick={() =>
-                                setShortlist((s) => s.filter((x) => x.id !== c.id))
-                              }
-                              aria-label={`Remove ${c.name}`}
-                              className="text-muted-foreground transition-colors hover:text-foreground"
-                            >
-                              <X className="size-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      ))}
-                    </tr>
-                    <tr className="border-t border-border">
-                      <th className="py-3 pr-6 text-xs font-normal text-muted-foreground">
-                        Approval status
-                      </th>
-                      {shortlist.map((c) => (
-                        <td
-                          key={c.id}
-                          className={`py-3 pr-6 ${c.status === "approved" ? "text-ok-foreground" : "text-warn-foreground"}`}
-                        >
-                          {c.status === "approved" ? "Approved" : "Conditional"}
-                        </td>
-                      ))}
-                    </tr>
-                    <tr className="border-t border-border">
-                      <th className="py-3 pr-6 text-xs font-normal text-muted-foreground">
-                        Accreditation
-                      </th>
-                      {shortlist.map((c) => (
-                        <td key={c.id} className="py-3 pr-6">
-                          {c.accreditation}
-                        </td>
-                      ))}
-                    </tr>
-                    <tr className="border-t border-border">
-                      <th className="py-3 pr-6 text-xs font-normal text-muted-foreground">
-                        Approved since
-                      </th>
-                      {shortlist.map((c) => (
-                        <td key={c.id} className="py-3 pr-6">
-                          {c.since}
-                        </td>
-                      ))}
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
   );

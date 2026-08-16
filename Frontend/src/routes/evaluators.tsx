@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
-import { AlertTriangle, Check, Clock, MapPin } from "lucide-react";
+import { AlertTriangle, Check, Clock, MapPin, UserCheck, Sparkles, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -11,7 +11,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { DashboardShell } from "@/components/setu/dashboard-shell";
-import { MetricRow, StatTile, TonePill } from "@/components/setu/primitives";
+import { MetricRow, StatTile, TonePill, AiRecommendationCard } from "@/components/setu/primitives";
 import {
   appRisk,
   applications,
@@ -29,12 +29,7 @@ export const Route = createFileRoute("/evaluators")({
       {
         name: "description",
         content:
-          "AI-assisted evaluator allocation for AICTE processing officers: specialization match, travel radius, workload and availability in one ranked view.",
-      },
-      { property: "og:title", content: "Evaluator Matching Radar" },
-      {
-        property: "og:description",
-        content: "Assign the right evaluator to each pending application in a single click.",
+          "Smart evaluator matching: rank visiting committee members by domain match, travel radius, workload and availability.",
       },
     ],
   }),
@@ -42,209 +37,184 @@ export const Route = createFileRoute("/evaluators")({
 });
 
 function EvaluatorsPage() {
-  const [selected, setSelected] = useState<string | null>(null);
-  const [assigned, setAssigned] = useState<Record<string, string>>({});
-  const [autoRef, setAutoRef] = useState(true);
+  const [selectedAppId, setSelectedAppId] = useState(applications[0].id);
+  const [assignedMap, setAssignedMap] = useState<Record<string, string>>({});
 
-  const pending = 14 - Object.keys(assigned).length;
-  const list = selected ? (evaluatorsByApp[selected] ?? []) : [];
+  const activeApp = applications.find((a) => a.id === selectedAppId) || applications[0];
+  const evaluators = evaluatorsByApp[selectedAppId] || [];
+
+  const handleAssign = (evaluatorId: string) => {
+    setAssignedMap((prev) => ({
+      ...prev,
+      [selectedAppId]: evaluatorId,
+    }));
+  };
 
   return (
     <TooltipProvider delayDuration={150}>
       <DashboardShell persona="officer">
-        <div>
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg font-medium tracking-tight">Evaluator Matching</h2>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <label className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
-                  Auto cross-reference: {autoRef ? "ON" : "OFF"}
-                  <Switch checked={autoRef} onCheckedChange={setAutoRef} />
-                </label>
-              </TooltipTrigger>
-              <TooltipContent className="max-w-xs">
-                Checks every submission against AISHE, UGC and NIRF records automatically.
-              </TooltipContent>
-            </Tooltip>
-          </div>
-          <p className="mt-2 flex items-baseline gap-1.5 text-sm text-muted-foreground">
-            <AnimatePresence mode="popLayout" initial={false}>
-              <motion.span
-                key={pending}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={spring}
-                className="inline-block font-medium text-foreground"
-              >
-                {pending}
-              </motion.span>
-            </AnimatePresence>
-            applications awaiting assignment.
-          </p>
-
-          <div className="mt-8 grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
-            {officerStats.map((s2) => (
-              <StatTile
-                key={s2.label}
-                label={s2.label}
-                value={s2.value}
-                delta={s2.delta}
-                tone={s2.tone}
-              />
-            ))}
-          </div>
-
-          <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_22rem]">
-            <ul className="space-y-px overflow-hidden rounded-xl border border-border bg-border">
-              {applications.map((a) => (
-                <li key={a.id}>
-                  <button
-                    onClick={() => setSelected(a.id)}
-                    className={`flex w-full flex-wrap items-center justify-between gap-4 bg-card px-6 py-5 text-left transition-colors hover:bg-accent ${
-                      selected === a.id ? "bg-accent" : ""
-                    }`}
-                  >
-                    <div>
-                      <p className="text-sm">{a.institution}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {a.specialization} · {a.region} · {a.id}
-                      </p>
-                      {autoRef && a.discrepancy && (
-                        <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-warn-soft px-2.5 py-1 text-[11px] text-warn-foreground">
-                          <AlertTriangle className="size-3" />
-                          {a.discrepancy}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap items-center gap-3">
-                      <TonePill
-                        tone={
-                          (appRisk[a.id]?.risk ?? 0) > 60
-                            ? "risk"
-                            : (appRisk[a.id]?.risk ?? 0) > 25
-                              ? "warn"
-                              : "ok"
-                        }
-                      >
-                        {appRisk[a.id]?.risk}% AI risk
-                      </TonePill>
-                      <TonePill tone="neutral">{appRisk[a.id]?.compliance}% compliance</TonePill>
-                      {assigned[a.id] ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-ok-soft px-2.5 py-1 text-[11px] text-ok-foreground">
-                          <Check className="size-3" /> {assigned[a.id]}
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[11px] text-muted-foreground">
-                          <Clock className="size-3" /> {a.daysLeft} days left
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                </li>
-              ))}
-            </ul>
-
-            <aside>
-              <AnimatePresence mode="wait">
-                {!selected ? (
-                  <motion.p
-                    key="empty"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="text-sm text-muted-foreground"
-                  >
-                    Select an application to see ranked evaluators.
-                  </motion.p>
-                ) : (
-                  <motion.div
-                    key={selected}
-                    initial={{ opacity: 0, x: 12 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 12 }}
-                    transition={spring}
-                  >
-                    <p className="text-xs tracking-widest text-muted-foreground uppercase">
-                      Ranked evaluators · {selected}
-                    </p>
-                    <ul className="mt-5 space-y-3">
-                      {list.map((e) => {
-                        const isAssigned = assigned[selected] === e.name;
-                        return (
-                          <motion.li
-                            layout
-                            transition={spring}
-                            key={e.id}
-                            className={`rounded-xl border p-5 ${
-                              isAssigned ? "border-ok bg-ok-soft/40" : "border-border bg-card"
-                            }`}
-                          >
-                            <div className="flex items-baseline justify-between gap-3">
-                              <p className="text-sm">{e.name}</p>
-                              <span className="text-xs text-muted-foreground">{e.match}%</span>
-                            </div>
-                            <p className="mt-1 text-xs text-muted-foreground">{e.affiliation}</p>
-                            <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-muted">
-                              <motion.div
-                                initial={{ width: 0 }}
-                                animate={{ width: `${e.match}%` }}
-                                transition={spring}
-                                className="h-full rounded-full bg-primary"
-                              />
-                            </div>
-                            <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                              <span className="inline-flex items-center gap-1">
-                                <MapPin className="size-3" /> {e.distanceKm} km
-                              </span>
-                              <span>{e.workload} active assignments</span>
-                              <span>Free from {e.available}</span>
-                            </p>
-                            <div className="mt-4">
-                              {isAssigned ? (
-                                <motion.span
-                                  initial={{ scale: 0.9, opacity: 0 }}
-                                  animate={{ scale: 1, opacity: 1 }}
-                                  transition={spring}
-                                  className="inline-flex items-center gap-1.5 text-xs text-ok-foreground"
-                                >
-                                  <Check className="size-3.5" /> Assigned
-                                </motion.span>
-                              ) : (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  disabled={Boolean(assigned[selected])}
-                                  onClick={() =>
-                                    setAssigned((s) => ({ ...s, [selected]: e.name }))
-                                  }
-                                >
-                                  Match
-                                </Button>
-                              )}
-                            </div>
-                          </motion.li>
-                        );
-                      })}
-                    </ul>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              <div className="mt-12">
-                <p className="text-xs tracking-widest text-muted-foreground uppercase">
-                  Bottleneck forecast
-                </p>
-                <div className="mt-5">
-                  {bottlenecks.map((b) => (
-                    <MetricRow key={b.label} label={b.label} value={b.value} tone={b.tone} />
-                  ))}
-                </div>
-                <p className="mt-5 text-xs leading-relaxed text-muted-foreground">
-                  {bottleneckAdvice}
+        <div className="space-y-8">
+          {/* Header Banner */}
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-light px-3 py-1 text-xs font-semibold text-primary">
+                  <Sparkles className="size-3.5" />
+                  Smart Evaluator Allocation Algorithm
+                </span>
+                <h2 className="mt-2 text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+                  Expert Visiting Committee Matching
+                </h2>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Optimization by domain match, travel radius (km), current evaluation workload, and availability.
                 </p>
               </div>
-            </aside>
+            </div>
+          </div>
+
+          {/* AI Bottleneck Advice Card */}
+          <AiRecommendationCard
+            title="Recommended Inspection Allocation"
+            description={bottleneckAdvice}
+            rationale="Assigning top-ranked evaluators within 50km reduces travel expenditure and cuts inspection lag."
+            actionText="Apply Recommendation"
+            onAction={() => {}}
+          />
+
+          <div className="grid gap-8 lg:grid-cols-[20rem_1fr]">
+            {/* Sidebar: Applications Selector */}
+            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+              <div className="flex items-center justify-between border-b border-border pb-3">
+                <h3 className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
+                  Pending Applications ({applications.length})
+                </h3>
+                <Filter className="size-3.5 text-muted-subtle" />
+              </div>
+
+              <div className="mt-3 space-y-2">
+                {applications.map((app) => {
+                  const isSelected = app.id === selectedAppId;
+                  const isAssigned = !!assignedMap[app.id];
+                  return (
+                    <button
+                      key={app.id}
+                      onClick={() => setSelectedAppId(app.id)}
+                      className={`w-full rounded-xl border p-3.5 text-left transition-all ${
+                        isSelected
+                          ? "border-primary bg-primary-light/60 shadow-sm"
+                          : "border-border bg-card hover:border-primary/30 hover:bg-primary-subtle/50"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-xs font-bold text-foreground">
+                          {app.id}
+                        </span>
+                        {isAssigned ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-ok-foreground">
+                            <Check className="size-3" /> Assigned
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-semibold text-warn">
+                            {app.daysLeft}d left
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 truncate text-xs font-semibold text-foreground">
+                        {app.institution}
+                      </p>
+                      <p className="mt-0.5 text-[11px] text-muted-subtle">{app.specialization}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Main Area: Evaluator Ranking List */}
+            <div className="space-y-6">
+              <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+                <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-4">
+                  <div>
+                    <h3 className="text-base font-bold text-foreground">
+                      Target: {activeApp.institution}
+                    </h3>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {activeApp.specialization} · {activeApp.region} · Application ID: {activeApp.id}
+                    </p>
+                  </div>
+                  <TonePill tone={assignedMap[activeApp.id] ? "ok" : "warn"}>
+                    {assignedMap[activeApp.id] ? "Evaluator Assigned" : "Needs Evaluator Assignment"}
+                  </TonePill>
+                </div>
+
+                <div className="mt-6 space-y-4">
+                  {evaluators.map((e, idx) => {
+                    const isSelectedEvaluator = assignedMap[activeApp.id] === e.id;
+                    return (
+                      <div
+                        key={e.id}
+                        className={`group rounded-2xl border p-5 transition-all ${
+                          isSelectedEvaluator
+                            ? "border-primary bg-primary-light/40 shadow-sm"
+                            : "border-border bg-card hover:border-primary/30"
+                        }`}
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-4">
+                          <div className="flex items-center gap-4">
+                            <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-primary text-sm font-extrabold text-white">
+                              #{idx + 1}
+                            </div>
+
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h4 className="text-sm font-bold text-foreground">{e.name}</h4>
+                                <span className="rounded-full bg-primary-light px-2.5 py-0.5 text-[10px] font-bold text-primary">
+                                  {e.match}% Match
+                                </span>
+                              </div>
+                              <p className="mt-0.5 text-xs text-muted-foreground">
+                                {e.affiliation}
+                              </p>
+
+                              <div className="mt-2.5 flex flex-wrap gap-4 text-xs text-muted-subtle">
+                                <span className="flex items-center gap-1">
+                                  <MapPin className="size-3.5 text-primary" /> {e.distanceKm} km radius
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Clock className="size-3.5 text-primary" /> Avail: {e.available}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  Workload: <strong className="text-foreground">{e.workload} active</strong>
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <Button
+                            size="sm"
+                            className={`gap-2 rounded-xl text-xs font-semibold ${
+                              isSelectedEvaluator
+                                ? "bg-ok text-white hover:bg-ok"
+                                : "bg-primary text-white hover:bg-primary-dark"
+                            }`}
+                            onClick={() => handleAssign(e.id)}
+                          >
+                            {isSelectedEvaluator ? (
+                              <>
+                                <Check className="size-4 stroke-[3]" /> Assigned
+                              </>
+                            ) : (
+                              <>
+                                <UserCheck className="size-4" /> Assign Evaluator
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </DashboardShell>

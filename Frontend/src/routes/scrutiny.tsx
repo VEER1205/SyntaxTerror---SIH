@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
-import { Check, Info, ScanLine } from "lucide-react";
+import { Check, Info, ScanLine, AlertTriangle, ShieldAlert, Sparkles, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { DashboardShell } from "@/components/setu/dashboard-shell";
-import { MetricRow, ScoreRing, TonePill } from "@/components/setu/primitives";
+import { MetricRow, ScoreRing, TonePill, NodeFlowConnector } from "@/components/setu/primitives";
 import {
   findings,
   journey,
@@ -30,237 +30,226 @@ export const Route = createFileRoute("/scrutiny")({
       {
         name: "description",
         content:
-          "Explainable readiness scoring for an AICTE application: document completeness, data consistency, vision-assisted infrastructure checks and a live approval journey.",
+          "Catch document mismatches, missing declarations, and infrastructure variances before official submission.",
       },
-      { property: "og:title", content: "AI Pre-Scrutiny — Setu" },
-      {
-        property: "og:description",
-        content: "See exactly why each item was flagged before the application reaches an officer.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: ScrutinyPage,
 });
 
 function ScrutinyPage() {
-  const [open, setOpen] = useState<Finding | null>(null);
-  const [resolved, setResolved] = useState<string[]>([]);
+  const [selectedFinding, setSelectedFinding] = useState<Finding | null>(null);
 
   return (
     <DashboardShell persona="coordinator">
-      <div>
-        <h2 className="text-lg font-medium tracking-tight">AI Pre-Scrutiny</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Application APL-2026-00421 · Computer Engineering · Intake 60
-        </p>
-
-        {/* Journey */}
-        <section className="mt-12">
-          <h2 className="text-sm font-medium">Application journey</h2>
-          <ol className="mt-6 flex flex-wrap items-start gap-y-6">
-            {journey.map((s, i) => (
-              <li key={s.label} className="flex min-w-40 flex-1 items-start gap-3">
-                <div className="flex flex-1 flex-col">
-                  <div className="flex items-center">
-                    <span
-                      className={`grid size-6 shrink-0 place-items-center rounded-full text-[11px] ${
-                        s.state === "done"
-                          ? "bg-ok-soft text-ok-foreground"
-                          : s.state === "current"
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-muted-foreground"
-                      }`}
-                    >
-                      {s.state === "done" ? <Check className="size-3" /> : i + 1}
-                    </span>
-                    {i < journey.length - 1 && (
-                      <span
-                        className={`ml-2 h-px flex-1 ${
-                          s.state === "done" ? "bg-ok/40" : "bg-border"
-                        }`}
-                      />
-                    )}
-                  </div>
-                  <p className="mt-3 text-xs">{s.label}</p>
-                  <p className="mt-0.5 text-[11px] text-muted-foreground">{s.meta}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        <div className="mt-14 grid gap-12 lg:grid-cols-[22rem_1fr]">
-          {/* Readiness */}
-          <section>
-            <h2 className="text-sm font-medium">Readiness</h2>
-            <div className="mt-6 flex items-center gap-6">
-              <ScoreRing score={readiness.score} />
-              <div>
-                <p className="text-sm">{readiness.verdict}</p>
-                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                  {readiness.note}
-                </p>
-              </div>
-            </div>
-            <div className="mt-8">
-              {readiness.metrics.map((m) => (
-                <div key={m.label} className="border-b border-border py-3.5 last:border-0">
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-sm text-muted-foreground">{m.label}</span>
-                    <span className="text-sm">{m.value}%</span>
-                  </div>
-                  <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-muted">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${m.value}%` }}
-                      transition={spring}
-                      className="h-full rounded-full bg-primary"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Findings */}
-          <section>
-            <h2 className="text-sm font-medium">Findings</h2>
-            <ul className="mt-6 space-y-3">
-              {findings.map((f) => {
-                const done = resolved.includes(f.id);
-                return (
-                  <motion.li
-                    layout
-                    transition={spring}
-                    key={f.id}
-                    className={`rounded-xl border p-5 ${
-                      done ? "border-ok bg-ok-soft/40" : "border-border bg-card"
-                    }`}
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm">{f.title}</p>
-                        <p className="mt-1 text-xs text-muted-foreground">{f.detail}</p>
-                      </div>
-                      <TonePill tone={done ? "ok" : f.tone}>
-                        {done ? "Resolved" : f.tone === "risk" ? "Action needed" : "Review"}
-                      </TonePill>
-                    </div>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <Button size="sm" variant="ghost" onClick={() => setOpen(f)}>
-                        <Info className="size-3.5" /> Why flagged?
-                      </Button>
-                      <AnimatePresence mode="wait" initial={false}>
-                        {done ? (
-                          <motion.span
-                            key="done"
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            transition={spring}
-                            className="inline-flex items-center gap-1.5 px-2 text-xs text-ok-foreground"
-                          >
-                            <Check className="size-3.5" /> Marked resolved
-                          </motion.span>
-                        ) : (
-                          <Button
-                            key="action"
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setResolved((r) => [...r, f.id])}
-                          >
-                            Mark as resolved
-                          </Button>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  </motion.li>
-                );
-              })}
-            </ul>
-
-            <div className="mt-8 rounded-xl border border-border bg-card p-5">
-              <p className="text-sm">Recommendation</p>
-              <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
-                Resolve the missing declaration and verify the faculty mismatch before formal
-                scrutiny. Setu assists; an authorised officer makes the final decision.
+      <div className="space-y-8">
+        {/* Header Audit Summary */}
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-light px-3 py-1 text-xs font-semibold text-primary">
+                <Sparkles className="size-3.5" />
+                AI Pre-Scrutiny Engine · Active
+              </span>
+              <h2 className="mt-2 text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+                Automated Audit & Compliance Check
+              </h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                12 automated compliance checks completed · 3 findings identified (1 blocking requirement)
               </p>
+            </div>
+
+            <div className="flex items-center gap-3">
               <Button
                 size="sm"
-                className="mt-5"
-                onClick={() => toast("Marked ready for officer review.")}
+                className="gap-2 rounded-xl bg-primary px-4 text-xs font-semibold text-white shadow-sm hover:bg-primary-dark"
+                onClick={() => toast.success("Re-running AI Pre-Scrutiny audit across all documents...")}
               >
-                Mark ready for review
+                <ScanLine className="size-4" />
+                Re-Run Audit
               </Button>
             </div>
-          </section>
+          </div>
+
+          {/* Connected Pipeline Visual */}
+          <div className="mt-5 border-t border-border pt-4">
+            <p className="text-[11px] font-bold tracking-wider text-muted-subtle uppercase mb-2">
+              AI Audit Flow Pipeline
+            </p>
+            <NodeFlowConnector
+              steps={["Documents Uploaded", "OCR Extraction", "Cross-Reference Check", "3 Findings Raised", "Action Recommended"]}
+              currentStepIndex={3}
+            />
+          </div>
         </div>
 
-        {/* Vision */}
-        <section className="mt-16 grid gap-12 lg:grid-cols-2">
-          <div>
-            <h2 className="text-sm font-medium">Infrastructure vision check</h2>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Uploaded laboratory photograph, measured automatically.
-            </p>
-            <div className="mt-6 grid aspect-[16/9] place-items-center rounded-2xl border border-dashed border-border bg-muted/40">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <ScanLine className="size-4" />
-                Computer lab · vision overlay (simulated)
-              </div>
-            </div>
+        {/* Audit Findings List */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-semibold tracking-wider text-muted-foreground uppercase">
+            Identified Findings ({findings.length})
+          </h3>
+
+          <div className="grid gap-4">
+            {findings.map((f) => {
+              const isBlocking = f.tone === "risk";
+              return (
+                <motion.div
+                  key={f.id}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`group rounded-2xl border p-6 shadow-sm transition-all ${
+                    isBlocking
+                      ? "border-risk/30 bg-risk-soft/40 hover:border-risk"
+                      : "border-warn/30 bg-warn-soft/40 hover:border-warn"
+                  }`}
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div className="flex items-start gap-3.5">
+                      <span
+                        className={`grid size-10 shrink-0 place-items-center rounded-xl font-bold ${
+                          isBlocking ? "bg-risk text-white" : "bg-warn text-white"
+                        }`}
+                      >
+                        {isBlocking ? <ShieldAlert className="size-5" /> : <AlertTriangle className="size-5" />}
+                      </span>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <TonePill tone={f.tone}>
+                            {isBlocking ? "Blocking Issue" : "Needs Review"}
+                          </TonePill>
+                          <span className="text-xs font-medium text-muted-subtle">
+                            AI Confidence: <strong className="font-semibold text-foreground">{f.confidence}</strong>
+                          </span>
+                        </div>
+                        <h4 className="mt-2 text-base font-bold text-foreground">{f.title}</h4>
+                        <p className="mt-1 text-xs font-semibold text-muted-foreground">{f.detail}</p>
+                        <p className="mt-2.5 text-xs text-muted-subtle border-l-2 border-primary/30 pl-3">
+                          {f.why}
+                        </p>
+                      </div>
+                    </div>
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1.5 rounded-xl border-border bg-card text-xs font-semibold hover:border-primary/40 hover:bg-primary-subtle"
+                      onClick={() => setSelectedFinding(f)}
+                    >
+                      Inspect Finding
+                      <ArrowRight className="size-3.5" />
+                    </Button>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
-          <div>
-            <h2 className="text-sm font-medium">Vision analysis</h2>
-            <div className="mt-6">
-              {visionMetrics.map((m) => (
-                <MetricRow key={m.label} label={m.label} value={m.value} tone={m.tone} />
+        </div>
+
+        {/* Vision AI Inspection & Readiness Grid */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Computer Vision Inspection */}
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div className="flex items-center justify-between border-b border-border pb-4">
+              <div>
+                <h3 className="text-base font-bold text-foreground">Vision AI Inspection Metrics</h3>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Automated computer vision analysis on uploaded lab & building photographs
+                </p>
+              </div>
+              <span className="rounded-full bg-primary-light px-2.5 py-0.5 text-[10px] font-semibold text-primary">
+                89% Vision Confidence
+              </span>
+            </div>
+
+            <div className="mt-4 divide-y divide-border">
+              {visionMetrics.map((vm) => (
+                <MetricRow key={vm.label} label={vm.label} value={vm.value} tone={vm.tone} />
               ))}
             </div>
-            <p className="mt-5 text-xs leading-relaxed text-muted-foreground">
-              Visual evidence suggests the submitted area and equipment count need evaluator
-              verification. Physical verification always stays with the evaluator.
-            </p>
           </div>
-        </section>
 
-        {/* Tracking */}
-        <section className="mt-16">
-          <h2 className="text-sm font-medium">Tracking</h2>
-          <ol className="mt-6 border-l border-border pl-6">
-            {trackingEvents.map((e) => (
-              <li key={e.title} className="relative pb-7 last:pb-0">
-                <span
-                  className={`absolute -left-[1.655rem] top-1.5 size-2 rounded-full ${
-                    e.state === "done"
-                      ? "bg-ok"
-                      : e.state === "current"
-                        ? "bg-primary ring-4 ring-primary/15"
-                        : "bg-border"
-                  }`}
-                />
-                <p className="text-sm">{e.title}</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">{e.meta}</p>
-              </li>
-            ))}
-          </ol>
-        </section>
+          {/* Audit Timeline */}
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div className="border-b border-border pb-4">
+              <h3 className="text-base font-bold text-foreground">Scrutiny Stage Timeline</h3>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Document verification trail
+              </p>
+            </div>
+
+            <div className="mt-4 space-y-4">
+              {trackingEvents.map((evt, i) => (
+                <div key={i} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`grid size-6 place-items-center rounded-full text-[10px] font-bold ${
+                        evt.state === "done"
+                          ? "bg-primary text-white"
+                          : evt.state === "current"
+                            ? "bg-primary text-white ring-4 ring-primary/20"
+                            : "bg-muted text-muted-subtle"
+                      }`}
+                    >
+                      {evt.state === "done" ? <Check className="size-3.5 stroke-[3]" /> : i + 1}
+                    </span>
+                    <div>
+                      <p className="text-xs font-semibold text-foreground">{evt.title}</p>
+                      <p className="text-[11px] text-muted-subtle">{evt.meta}</p>
+                    </div>
+                  </div>
+                  <TonePill tone={evt.state === "done" ? "ok" : evt.state === "current" ? "warn" : "neutral"}>
+                    {evt.state.toUpperCase()}
+                  </TonePill>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Modal Dialog for Inspecting Finding */}
+        <Dialog open={!!selectedFinding} onOpenChange={() => setSelectedFinding(null)}>
+          <DialogContent className="max-w-lg rounded-2xl p-6">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-bold text-foreground">
+                {selectedFinding?.title}
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">
+                Detailed AI reasoning and recommended resolution steps
+              </DialogDescription>
+            </DialogHeader>
+
+            {selectedFinding && (
+              <div className="mt-4 space-y-4">
+                <div className="rounded-xl bg-primary-subtle p-4">
+                  <p className="text-xs font-semibold text-primary">Discrepancy Details:</p>
+                  <p className="mt-1 text-xs text-foreground">{selectedFinding.detail}</p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-semibold text-foreground">Audit Explanation:</p>
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{selectedFinding.why}</p>
+                </div>
+
+                <div className="flex items-center justify-between border-t border-border pt-4">
+                  <span className="text-xs text-muted-subtle">
+                    Confidence: <strong className="text-foreground">{selectedFinding.confidence}</strong>
+                  </span>
+                  <Button
+                    size="sm"
+                    className="gap-2 rounded-xl bg-primary text-xs font-semibold text-white hover:bg-primary-dark"
+                    onClick={() => {
+                      toast.success("Navigating to Compliance Vault to re-upload document");
+                      setSelectedFinding(null);
+                    }}
+                  >
+                    Resolve in Compliance Vault
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
-
-      <Dialog open={Boolean(open)} onOpenChange={(v) => !v && setOpen(null)}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Why did Setu flag this?</DialogTitle>
-            <DialogDescription>{open?.title}</DialogDescription>
-          </DialogHeader>
-          <p className="text-sm leading-relaxed text-muted-foreground">{open?.why}</p>
-          <div className="mt-2 rounded-lg bg-muted px-4 py-3 text-xs text-muted-foreground">
-            Confidence {open?.confidence} · Recommended action: verify the source record before
-            formal scrutiny.
-          </div>
-        </DialogContent>
-      </Dialog>
     </DashboardShell>
   );
 }
