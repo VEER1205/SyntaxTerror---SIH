@@ -16,9 +16,13 @@ app = FastAPI(lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",     
-        "http://localhost:3000",     
-        "https://your-app.vercel.app" 
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://localhost:8080",     # Vite TanStack Start default
+        "http://localhost:8081",     # Vite fallback when 8080 is in use
+        "http://localhost:8082",     # extra fallback
+        "http://localhost:4173",     # vite preview
+        "https://your-app.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],

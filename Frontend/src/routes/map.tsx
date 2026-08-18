@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { CheckCircle2, Filter, MapPin, Search, ShieldCheck, XCircle } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { CheckCircle2, Filter, LogIn, MapPin, Search, ShieldCheck, XCircle } from "lucide-react";
 import { colleges, type College } from "@/lib/setu-data";
 import { DashboardShell } from "@/components/setu/dashboard-shell";
-import { getSession } from "@/lib/auth";
+import { useAuth } from "@/hooks/useAuth";
 import "leaflet/dist/leaflet.css";
+
 
 export const Route = createFileRoute("/map")({
   head: () => ({
@@ -90,9 +91,10 @@ function InstitutionMapPage() {
   const [status, setStatus] = useState("All statuses");
   const [selected, setSelected] = useState<College | null>(null);
 
-  // Get the current user session so we know which sidebar to show
-  const session = getSession();
-  const persona = session?.role === "Institute" ? "coordinator" : "officer";
+  // Get the current user session — map is public so no redirect if null
+  const { user, isLoading } = useAuth();
+  const persona = user?.role === "institut" ? "coordinator" : "officer";
+  const isAuthenticated = !!user;
 
   const states = useMemo(
     () => ["All states", ...Array.from(new Set(colleges.map((c) => c.state))).sort()],
@@ -110,9 +112,8 @@ function InstitutionMapPage() {
     return matchesQuery && matchesState && matchesStatus;
   });
 
-  return (
-    <DashboardShell persona={persona}>
-      <div className="mx-auto max-w-7xl">
+  const mapContent = (
+    <div className="mx-auto max-w-7xl">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div>
             <span className="text-xs font-semibold tracking-wider text-primary uppercase">
@@ -280,6 +281,40 @@ function InstitutionMapPage() {
           </section>
         )}
       </div>
-    </DashboardShell>
+  );
+
+  // Authenticated users get the role-appropriate sidebar shell
+  if (!isLoading && isAuthenticated) {
+    return <DashboardShell persona={persona}>{mapContent}</DashboardShell>;
+  }
+
+  // Public / student / unauthenticated (including while loading auth):
+  // Always render the public header so the map never returns undefined
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-30 border-b border-border bg-card/90 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+          <Link to="/" className="flex items-center gap-2 text-sm font-bold text-foreground">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="size-8">
+              <path d="M 68 28 C 65 18, 48 14, 38 18 C 24 24, 22 40, 36 46 L 62 56 C 78 62, 76 78, 62 84 C 48 90, 30 84, 26 74" stroke="#087F5B" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+              <path d="M 12 70 Q 50 48 88 70" stroke="#087F5B" strokeWidth="4" strokeLinecap="round" fill="none" />
+              <path d="M 72 16 L 75 8 L 78 16 L 86 19 L 78 22 L 75 30 L 72 22 L 64 19 Z" fill="#087F5B" />
+            </svg>
+            <span className="tracking-tight">SAARTHI</span>
+          </Link>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-muted-foreground">Public Institution Map</span>
+            <Link
+              to="/login"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-white hover:bg-primary-dark"
+            >
+              <LogIn className="size-3.5" />
+              Sign In
+            </Link>
+          </div>
+        </div>
+      </header>
+      <main className="px-6 py-8">{mapContent}</main>
+    </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { motion } from "motion/react";
 import {
@@ -13,7 +13,8 @@ import {
 } from "lucide-react";
 import { CommandMenu } from "@/components/setu/command-menu";
 import { spring } from "@/lib/setu-data";
-import { getSession, logout, demoAccounts } from "@/lib/auth";
+import { logout } from "@/lib/auth";
+import { useAuth, clearAuthCache } from "@/hooks/useAuth";
 
 export type Persona = "coordinator" | "officer";
 
@@ -59,31 +60,25 @@ export function DashboardShell({
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [session, setSession] = useState<any>(null);
-
-  useEffect(() => {
-    // HACKATHON BYPASS: Grab the session, but NEVER force a redirect.
-    // This allows you to click around freely without being blocked.
-    let current = getSession();
-
-    // If session is totally broken, assign a fallback based on the page they are on
-    if (!current) {
-      current = persona === "coordinator" ? demoAccounts[1] : demoAccounts[0];
-    }
-    
-    setSession(current);
-  }, [persona]);
+  const { user } = useAuth();
 
   const nav = NAV[persona];
-  
-  // Mix the session data with our hardcoded VIP data
-  const who = session 
-    ? { 
-        name: session.name || WHO[persona].name, 
-        org: session.role === "Institute" ? WHO.coordinator.org : WHO.officer.org, 
-        line: persona === "coordinator" ? "Let's take a look at where your application stands." : "Here's what needs your judgement today." 
-      } 
+
+  // Build display info: prefer real session data, fallback to hardcoded persona defaults
+  const who = user
+    ? {
+        name: user.userName,
+        org:
+          user.role === "institut"
+            ? WHO.coordinator.org
+            : user.role === "AicteOfficer"
+              ? WHO.officer.org
+              : "AICTE Portal",
+        line:
+          persona === "coordinator"
+            ? "Let's take a look at where your application stands."
+            : "Here's what needs your judgement today.",
+      }
     : WHO[persona];
 
   return (
@@ -134,6 +129,7 @@ export function DashboardShell({
           </p>
           <button
             onClick={() => { 
+              clearAuthCache();
               logout(); 
               void navigate({ to: "/login" }); 
             }}

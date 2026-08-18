@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { DashboardShell } from "@/components/setu/dashboard-shell";
 import { MetricRow, TonePill } from "@/components/setu/primitives";
 import { goldenRecord, type Tone } from "@/lib/setu-data";
+import { ProtectedRoute } from "@/components/setu/protected-route";
 
 export const Route = createFileRoute("/vault")({
   head: () => ({
@@ -102,7 +103,8 @@ function VaultPage() {
   };
 
   return (
-    <DashboardShell persona="coordinator">
+    <ProtectedRoute allowedRoles={["institut"]}>
+      <DashboardShell persona="coordinator">
       <div className="space-y-8">
         {/* Header Summary */}
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
@@ -228,5 +230,6 @@ function VaultPage() {
         </div>
       </div>
     </DashboardShell>
+    </ProtectedRoute>
   );
 }

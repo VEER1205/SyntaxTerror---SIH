@@ -15,5 +15,5 @@ class LoginRequest(BaseModel):
 class SignupRequest(BaseModel):
     email: EmailStr
     userName: str
-    Password: str
-    role:UserRole
+    password: str  # fixed: was 'Password' (capital P)
+    role: UserRole

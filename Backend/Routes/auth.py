@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Response, HTTPException, status
 from Models import LoginRequest, UserRole, SignupRequest
-from utilities import createAccessToken, verifyPassword, hashPassword
+from utilities import createAccessToken, verifyPassword, hashPassword, getCurrentUserFromCookie
 from database import getDatabase
 
 router = APIRouter()
@@ -33,7 +33,8 @@ async def userLogin(credentials: LoginRequest, response: Response, db = Depends(
                 detail="Incorrect username or password"
             )
 
-        token = createAccessToken(userName=credentials.userName, role=user["role"])
+        # Fix: use credentials.identifier (not credentials.userName which doesn't exist)
+        token = createAccessToken(userName=credentials.identifier, role=user["role"])
 
         response.set_cookie(
             key="access_token",
@@ -42,7 +43,7 @@ async def userLogin(credentials: LoginRequest, response: Response, db = Depends(
             secure=False,   
             samesite="lax", 
         )
-        return {"message": "Login successful"}
+        return {"message": "Login successful", "role": user["role"]}
 
     except HTTPException:
         raise 
@@ -91,3 +92,16 @@ async def userSignup(credentials: SignupRequest, db = Depends(getDatabase)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Could not create user at this time. Please try again."
         )
+
+
+@router.get("/me")
+async def getMe(user: dict = Depends(getCurrentUserFromCookie)):
+    """Returns the current authenticated user's info from the JWT cookie."""
+    return {"userName": user["username"], "role": user["role"]}
+
+
+@router.post("/logout")
+async def logout(response: Response):
+    """Clears the access_token cookie to log the user out."""
+    response.delete_cookie(key="access_token", samesite="lax")
+    return {"message": "Logged out successfully"}

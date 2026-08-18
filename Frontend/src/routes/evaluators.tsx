@@ -21,6 +21,7 @@ import {
   officerStats,
   spring,
 } from "@/lib/setu-data";
+import { ProtectedRoute } from "@/components/setu/protected-route";
 
 export const Route = createFileRoute("/evaluators")({
   head: () => ({
@@ -51,8 +52,9 @@ function EvaluatorsPage() {
   };
 
   return (
-    <TooltipProvider delayDuration={150}>
-      <DashboardShell persona="officer">
+    <ProtectedRoute allowedRoles={["AicteOfficer"]}>
+      <TooltipProvider delayDuration={150}>
+        <DashboardShell persona="officer">
         <div className="space-y-8">
           {/* Header Banner */}
           <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
@@ -217,7 +219,8 @@ function EvaluatorsPage() {
             </div>
           </div>
         </div>
-      </DashboardShell>
-    </TooltipProvider>
+        </DashboardShell>
+      </TooltipProvider>
+    </ProtectedRoute>
   );
 }

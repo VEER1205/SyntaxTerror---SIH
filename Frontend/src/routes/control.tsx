@@ -24,6 +24,7 @@ import {
   spring,
   stageLoad,
 } from "@/lib/setu-data";
+import { ProtectedRoute } from "@/components/setu/protected-route";
 
 export const Route = createFileRoute("/control")({
   head: () => ({
@@ -41,7 +42,8 @@ export const Route = createFileRoute("/control")({
 
 function ControlDeskPage() {
   return (
-    <DashboardShell persona="officer">
+    <ProtectedRoute allowedRoles={["AicteOfficer"]}>
+      <DashboardShell persona="officer">
       <div className="space-y-8">
         {/* Header Overview Banner */}
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
@@ -251,5 +253,6 @@ function ControlDeskPage() {
         </div>
       </div>
     </DashboardShell>
+    </ProtectedRoute>
   );
 }

@@ -22,6 +22,7 @@ import {
   visionMetrics,
   type Finding,
 } from "@/lib/setu-data";
+import { ProtectedRoute } from "@/components/setu/protected-route";
 
 export const Route = createFileRoute("/scrutiny")({
   head: () => ({
@@ -41,7 +42,8 @@ function ScrutinyPage() {
   const [selectedFinding, setSelectedFinding] = useState<Finding | null>(null);
 
   return (
-    <DashboardShell persona="coordinator">
+    <ProtectedRoute allowedRoles={["institut", "AicteOfficer"]}>
+      <DashboardShell persona="coordinator">
       <div className="space-y-8">
         {/* Header Audit Summary */}
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
@@ -251,5 +253,6 @@ function ScrutinyPage() {
         </Dialog>
       </div>
     </DashboardShell>
+    </ProtectedRoute>
   );
 }

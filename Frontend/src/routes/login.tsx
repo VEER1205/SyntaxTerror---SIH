@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Building2, GraduationCap, LogIn, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Building2, GraduationCap, LogIn, ShieldCheck, CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { demoAccounts, login, type AppRole } from "@/lib/auth";
+import { demoAccounts, login, getHomeRoute, type UserRole } from "@/lib/auth";
+import { clearAuthCache } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -11,57 +12,65 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
+// Map backend role values to display info
 const roleMeta: Record<
-  AppRole,
-  { title: string; description: string; icon: typeof Building2; username: string; password: string }
+  UserRole,
+  { title: string; description: string; icon: typeof Building2; demoUsername: string; demoPassword: string }
 > = {
-  institution: {
+  institut: {
     title: "Institution Coordinator",
     description: "Manage applications, compliance documents and AI pre-scrutiny.",
     icon: Building2,
-    username: "institution",
-    password: "institution123",
+    demoUsername: "demo_institution",
+    demoPassword: "institution123",
   },
-  officer: {
+  AicteOfficer: {
     title: "AICTE Processing Officer",
     description: "Review applications, evaluator matching and control desk analytics.",
     icon: ShieldCheck,
-    username: "officer",
-    password: "officer123",
+    demoUsername: "demo_officer",
+    demoPassword: "officer123",
   },
   student: {
     title: "Student / Public",
     description: "Access public approval records and institution map.",
     icon: GraduationCap,
-    username: "student",
-    password: "student123",
+    demoUsername: "demo_student",
+    demoPassword: "student123",
   },
 };
 
+const roleOrder: UserRole[] = ["institut", "AicteOfficer", "student"];
+
 function LoginPage() {
   const navigate = useNavigate();
-  const [selected, setSelected] = useState<AppRole>("institution");
-  const [username, setUsername] = useState("institution");
+  const [selected, setSelected] = useState<UserRole>("institut");
+  const [identifier, setIdentifier] = useState("demo_institution");
   const [password, setPassword] = useState("institution123");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const chooseRole = (role: AppRole) => {
+  const chooseRole = (role: UserRole) => {
     setSelected(role);
-    setUsername(roleMeta[role].username);
-    setPassword(roleMeta[role].password);
+    setIdentifier(roleMeta[role].demoUsername);
+    setPassword(roleMeta[role].demoPassword);
     setError("");
   };
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const session = login(username, password);
-    if (!session) {
-      setError("Invalid demo credentials. Use the credentials shown below.");
-      return;
+    setError("");
+    setIsLoading(true);
+
+    try {
+      const { session } = await login(identifier, password);
+      clearAuthCache(); // Force re-fetch of session on next protected page
+      void navigate({ to: getHomeRoute(session.role) });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Login failed. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
-    if (session.role === "institution") void navigate({ to: "/dashboard" });
-    else if (session.role === "officer") void navigate({ to: "/control" });
-    else void navigate({ to: "/map" });
   };
 
   return (
@@ -148,7 +157,7 @@ function LoginPage() {
 
             {/* Role Selection Tabs */}
             <div className="mt-6 grid gap-2.5">
-              {(Object.keys(roleMeta) as AppRole[]).map((role) => {
+              {roleOrder.map((role) => {
                 const meta = roleMeta[role];
                 const Icon = meta.icon;
                 const isSelected = selected === role;
@@ -184,11 +193,16 @@ function LoginPage() {
             {/* Login Form */}
             <form onSubmit={submit} className="mt-6 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-foreground">Username</label>
+                <label className="block text-xs font-semibold text-foreground">
+                  Username or Email
+                </label>
                 <input
+                  id="login-identifier"
                   type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  autoComplete="username"
+                  required
                   className="mt-1.5 w-full rounded-xl border border-input bg-background px-3.5 py-2.5 text-xs font-medium text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </div>
@@ -196,9 +210,12 @@ function LoginPage() {
               <div>
                 <label className="block text-xs font-semibold text-foreground">Password</label>
                 <input
+                  id="login-password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                  required
                   className="mt-1.5 w-full rounded-xl border border-input bg-background px-3.5 py-2.5 text-xs font-medium text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </div>
@@ -210,23 +227,32 @@ function LoginPage() {
               )}
 
               <Button
+                id="login-submit"
                 type="submit"
-                className="w-full gap-2 rounded-xl bg-primary py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-primary-dark"
+                disabled={isLoading}
+                className="w-full gap-2 rounded-xl bg-primary py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-primary-dark disabled:opacity-60"
               >
-                <LogIn className="size-4" />
-                Sign In to Workspace
+                {isLoading ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <LogIn className="size-4" />
+                )}
+                {isLoading ? "Signing in…" : "Sign In to Workspace"}
               </Button>
             </form>
 
             {/* Demo Credentials Box */}
             <div className="mt-6 rounded-2xl border border-border bg-primary-subtle/40 p-4">
-              <p className="text-xs font-semibold text-foreground">Demo Credentials</p>
+              <p className="text-xs font-semibold text-foreground">Demo Credentials (offline fallback)</p>
+              <p className="mt-1 text-[10px] text-muted-foreground">
+                Use these when the backend is unreachable. Real users log in with their MongoDB credentials.
+              </p>
               <div className="mt-2.5 grid gap-1 text-[11px] text-muted-foreground">
                 {demoAccounts.map((a) => (
-                  <div key={a.username} className="flex items-center justify-between">
+                  <div key={a.userName} className="flex items-center justify-between">
                     <span className="font-medium text-foreground capitalize">{a.role}:</span>
                     <code className="font-mono text-[10px] text-primary">
-                      {a.username} / {a.password}
+                      {a.userName} / {a.password}
                     </code>
                   </div>
                 ))}

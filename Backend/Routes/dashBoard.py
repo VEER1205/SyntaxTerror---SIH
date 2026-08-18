@@ -3,7 +3,7 @@ from database import getDatabase
 
 dashBoardRouter = APIRouter()
 
-@dashBoardRouter.post("/heatmap")
+@dashBoardRouter.get("/heatmap")
 async def get_all_institutes(db = Depends(getDatabase),state: str = Query(None, description="Filter by state name, e.g., Maharashtra")):
     collection = db["Institute"]
     query = {}
